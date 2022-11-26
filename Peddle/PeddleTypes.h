@@ -8,10 +8,82 @@
 #pragma once
 
 #include "Types.h"
+#include <sys/types.h>
+
+//
+// Booleans
+//
+
+#ifndef __cplusplus
+#include <cstdbool>
+#endif
+
+
+//
+// Strings
+//
+
+#ifdef __cplusplus
+#include <string>
+#include <cstring>
+#endif
 
 #ifdef __cplusplus
 namespace peddle {
 #endif
+
+//
+// Integers
+//
+
+// Signed integers
+typedef signed char        i8;
+typedef signed short       i16;
+typedef signed int         i32;
+typedef signed long long   i64;
+typedef signed long        isize;
+
+// Unsigned integers
+typedef unsigned char      u8;
+typedef unsigned short     u16;
+typedef unsigned int       u32;
+typedef unsigned long long u64;
+typedef unsigned long      usize;
+
+
+//
+// Enumerations
+//
+
+/* The following macros 'enum_<type>' provide a way to make enumerations
+ * easily accessible in Swift. All macros have two definitions, one for the
+ * Swift side and one for the C side. Please note that the type mapping for
+ * enum_long differs on both sides. On the Swift side, enums of this type are
+ * mapped to 'long enums' to make them accessible via the Swift standard type
+ * 'Int'. On the C side all enums are mapped to 'enum-less longs' to make them
+ * easily serializable.
+ */
+
+#if defined(__SWIFT__)
+
+// Definition for Swift
+#define peddle_enum_generic(_name, _type) \
+typedef enum __attribute__((enum_extensibility(open))) _name : _type _name; \
+enum _name : _type
+
+#define peddle_enum_long(_name) peddle_enum_generic(_name, long)
+
+#else
+
+// Definition for C
+#define peddle_enum_generic(_name, _type) \
+typedef _type _name; \
+enum : _type
+
+#define peddle_enum_long(_name) peddle_enum_generic(_name, long)
+
+#endif
+
 
 //
 // Constants
@@ -61,7 +133,7 @@ static constexpr int CPU_CHECK_CP           = (1 << 3);
 // Enumerations
 //
 
-enum_long(CPUREV)
+peddle_enum_long(CPUREV)
 {
     MOS_6502,       // PET 2001, VC 20, Atari 800, Apple I/II, BBC Micro
     MOS_6507,       // Atari 2600
@@ -70,7 +142,7 @@ enum_long(CPUREV)
 };
 typedef CPUREV CPURevision;
 
-enum_long(ADDR_MODE)
+peddle_enum_long(ADDR_MODE)
 {
     ADDR_IMPLIED,
     ADDR_ACCUMULATOR,
@@ -89,7 +161,7 @@ enum_long(ADDR_MODE)
 };
 typedef ADDR_MODE AddressingMode;
 
-enum_long(MICRO_INSTRUCTION) {
+peddle_enum_long(MICRO_INSTRUCTION) {
 
     fetch,
 

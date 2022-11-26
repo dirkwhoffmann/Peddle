@@ -9,6 +9,8 @@
 #include <iostream>
 #include <cstdio>
 
+using namespace peddle;
+
 unsigned char ram[65536] = { };
 
 unsigned char prog[] =

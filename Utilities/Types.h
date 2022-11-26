@@ -7,6 +7,8 @@
 // See https://www.gnu.org for license information
 // -----------------------------------------------------------------------------
 
+/*
+
 #pragma once
 
 #include <sys/types.h>
@@ -16,7 +18,7 @@
 //
 
 #ifndef __cplusplus
-#include <stdbool.h>
+#include <cstdbool>
 #endif
 
 
@@ -27,13 +29,14 @@
 #ifdef __cplusplus
 #include <string>
 #include <cstring>
-using std::string;
 #endif
 
 
 //
 // Integers
 //
+
+namespace peddle {
 
 // Signed integers
 typedef signed char        i8;
@@ -49,38 +52,31 @@ typedef unsigned int       u32;
 typedef unsigned long long u64;
 typedef unsigned long      usize;
 
-
 //
 // Enumerations
 //
 
-/* The following macros 'enum_<type>' provide a way to make enumerations
- * easily accessible in Swift. All macros have two definitions, one for the
- * Swift side and one for the C side. Please note that the type mapping for
- * enum_long differs on both sides. On the Swift side, enums of this type are
- * mapped to 'long enums' to make them accessible via the Swift standard type
- * 'Int'. On the C side all enums are mapped to 'enum-less longs' to make them
- * easily serializable.
- */
-
 #if defined(__SWIFT__)
 
 // Definition for Swift
-#define enum_generic(_name, _type) \
+#define peddle_enum_generic(_name, _type) \
 typedef enum __attribute__((enum_extensibility(open))) _name : _type _name; \
 enum _name : _type
 
-#define enum_long(_name) enum_generic(_name, long)
-#define enum_i8(_name) enum_generic(_name, i8)
+#define peddle_enum_long(_name) peddle_enum_generic(_name, long)
 
 #else
 
 // Definition for C
-#define enum_generic(_name, _type) \
+#define peddle_enum_generic(_name, _type) \
 typedef _type _name; \
 enum : _type
 
-#define enum_long(_name) enum_generic(_name, long)
-#define enum_i8(_name) enum_generic(_name, i8)
+#define peddle_enum_long(_name) peddle_enum_generic(_name, long)
 
 #endif
+
+}
+
+
+*/
