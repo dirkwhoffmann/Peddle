@@ -11,6 +11,8 @@
 
 #include <algorithm>
 
+namespace peddle {
+
 template <class T, isize delay> class TimeDelayed {
     
     static constexpr isize capacity = delay + 1;
@@ -120,3 +122,5 @@ public:
         return pipeline[std::max(0LL, timeStamp - *clock + d)];
     }
 };
+
+}

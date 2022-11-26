@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------
 
 #include "Peddle.h"
-#include "PeddleUtils.h"
+#include "PeddleMacros.h"
 
 namespace peddle {
 
