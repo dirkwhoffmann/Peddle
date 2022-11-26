@@ -39,7 +39,7 @@ public:
     {
         long len;
 
-        printf("%04X %02X %02X %02X %02X %02X  %d1%d%d%d%d%d%d %-15s",
+        printf("%04X %02X %02X %02X %02X %02X  %d%d1%d%d%d%d%d %-15s",
                getPC0(), getP(), reg.a, reg.x, reg.y, reg.sp,
                getN(), getV(), getB(), getD(), getI(), getZ(), getC(),
                debugger.disassembleInstruction(&len)
