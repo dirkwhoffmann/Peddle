@@ -9,7 +9,6 @@
 
 #pragma once
 
-// #include "Macros.h"
 #include <algorithm>
 
 template <class T, isize delay> class TimeDelayed {
@@ -95,7 +94,6 @@ public:
         // Shift pipeline
         i64 diff = referenceTime - timeStamp;
         for (isize i = capacity - 1; i >= 0; i--) {
-            assert((i - diff <= 0) || (i - diff <= capacity));
             pipeline[i] = (i - diff > 0) ? pipeline[i - diff] : pipeline[0];
         }
         
@@ -119,7 +117,6 @@ public:
     
     // Reads a value from the pipeline with a custom delay
     T readWithDelay(u8 d) const {
-        assert(d <= this->capacity);
         return pipeline[std::max(0LL, timeStamp - *clock + d)];
     }
 };

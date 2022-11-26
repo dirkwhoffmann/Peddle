@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <cassert>
+
 #define LO_BYTE(x) (u8)((x) & 0xFF)
 #define HI_BYTE(x) (u8)((x) >> 8)
 
