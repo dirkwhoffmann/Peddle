@@ -9,7 +9,7 @@
 
 #include "PeddleConfig.h"
 #include "PeddleDebugger.h"
-#include "TimeDelayed.h"
+#include "PeddleUtils.h"
 
 namespace peddle {
 

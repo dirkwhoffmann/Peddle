@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include <algorithm>
-
 namespace peddle {
 
 template <class T, isize delay> class TimeDelayed {
