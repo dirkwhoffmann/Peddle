@@ -30,7 +30,6 @@ endif()
 target_include_directories(main PUBLIC
 
 ${CMAKE_SOURCE_DIR}/.
-${CMAKE_SOURCE_DIR}/Utilities
 ${CMAKE_SOURCE_DIR}/Peddle
 )
 

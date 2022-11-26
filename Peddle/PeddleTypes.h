@@ -7,9 +7,6 @@
 
 #pragma once
 
-#include "Types.h"
-#include <sys/types.h>
-
 //
 // Booleans
 //

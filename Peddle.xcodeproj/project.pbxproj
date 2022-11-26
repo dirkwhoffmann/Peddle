@@ -36,7 +36,6 @@
 		5044C5DB2932294100F4A413 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		5044C5DC2932294100F4A413 /* PeddleExec_cpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PeddleExec_cpp.h; sourceTree = "<group>"; };
 		5044C5DD2932294100F4A413 /* PeddleMemory_cpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PeddleMemory_cpp.h; sourceTree = "<group>"; };
-		5044C5E12932297800F4A413 /* Types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Types.h; sourceTree = "<group>"; };
 		5044C5E3293229B900F4A413 /* PeddleUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PeddleUtils.h; sourceTree = "<group>"; };
 		5044C5E429324D1300F4A413 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		50D1EA07292D3C0E008E1415 /* Peddle */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Peddle; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -54,20 +53,11 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		5044C5E22932298400F4A413 /* Utilities */ = {
-			isa = PBXGroup;
-			children = (
-				5044C5E12932297800F4A413 /* Types.h */,
-			);
-			path = Utilities;
-			sourceTree = "<group>";
-		};
 		50D1E9FE292D3C0E008E1415 = {
 			isa = PBXGroup;
 			children = (
 				5044C5E429324D1300F4A413 /* CMakeLists.txt */,
 				50D1EA0A292D3C0E008E1415 /* main.cpp */,
-				5044C5E22932298400F4A413 /* Utilities */,
 				50D1EA09292D3C0E008E1415 /* Peddle */,
 				50D1EA08292D3C0E008E1415 /* Products */,
 			);
