@@ -9,6 +9,7 @@
 
 #include "PeddleTypes.h"
 #include "PeddleMacros.h"
+#include <cstdint>
 
 namespace peddle {
 
