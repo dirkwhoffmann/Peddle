@@ -7,63 +7,12 @@
 
 #include "PeddleConfig.h"
 #include "Peddle.h"
-
+#include <iostream>
+#include <iomanip>
+#include <fstream>
 #include <cassert>
 
 namespace peddle {
-
-//
-// Printing
-//
-
-static void
-sprint8d(char *s, u8 value)
-{
-    for (int i = 2; i >= 0; i--) {
-
-        u8 digit = value % 10;
-        s[i] = '0' + digit;
-        value /= 10;
-    }
-    s[3] = 0;
-}
-
-static void
-sprint8x(char *s, u8 value)
-{
-    for (int i = 1; i >= 0; i--) {
-
-        u8 digit = value % 16;
-        s[i] = (digit <= 9) ? ('0' + digit) : ('A' + digit - 10);
-        value /= 16;
-    }
-    s[2] = 0;
-}
-
-static void
-sprint16d(char *s, u16 value)
-{
-    for (int i = 4; i >= 0; i--) {
-
-        u8 digit = value % 10;
-        s[i] = '0' + digit;
-        value /= 10;
-    }
-    s[5] = 0;
-}
-
-static void
-sprint16x(char *s, u16 value)
-{
-    for (int i = 3; i >= 0; i--) {
-
-        u8 digit = value % 16;
-        s[i] = (digit <= 9) ? ('0' + digit) : ('A' + digit - 10);
-        value /= 16;
-    }
-    s[4] = 0;
-}
-
 
 //
 // Guard
@@ -251,17 +200,16 @@ Debugger::reset()
 }
 
 void
-Debugger::registerInstruction(u8 opcode, const char *mnemonic, AddressingMode mode)
-{
-    this->mnemonic[opcode] = mnemonic;
-    this->addressingMode[opcode] = mode;
-}
-
-void
 Debugger::setSoftStop(u64 addr)
 {
     softStop = addr;
     breakpoints.setNeedsCheck(true);
+}
+
+void
+Debugger::setSoftStopAtNextInstr()
+{
+    setSoftStop(cpu.getAddressOfNextInstruction());
 }
 
 bool
@@ -293,6 +241,41 @@ Debugger::watchpointMatches(u32 addr)
 }
 
 void
+Debugger::dumpLogBuffer(std::ostream& os, isize count)
+{
+    isize num = loggedInstructions();
+
+    char pc[16];
+    char instr[16];
+    char flags[16];
+
+    for (isize i = num - count; i < num ; i++) {
+
+        if (i >= 0) {
+
+            cpu.debugger.disassembleRecordedPC(i, pc);
+            cpu.debugger.disassembleRecordedInstr(i, instr);
+            cpu.debugger.disassembleRecordedFlags(i, flags);
+
+            os << std::setfill('0');
+            os << "   ";
+            os << std::right << std::setw(4) << pc;
+            os << "   ";
+            os << flags;
+            os << "    ";
+            os << instr;
+            os << std::endl;
+        }
+    }
+}
+
+void
+Debugger::dumpLogBuffer(std::ostream& os)
+{
+    dumpLogBuffer(os, loggedInstructions());
+}
+
+void
 Debugger::enableLogging()
 {
     cpu.flags |= CPU_LOG_INSTRUCTION;
@@ -315,7 +298,7 @@ Debugger::logInstruction()
 {
     u16 pc = cpu.getPC0();
     u8 opcode = cpu.readDasm(pc);
-    isize length = getLengthOfInstruction(opcode);
+    isize length = cpu.getLengthOfInstruction(opcode);
 
     isize i = logCnt++ % LOG_BUFFER_CAPACITY;
     
@@ -360,303 +343,49 @@ Debugger::loggedPC0Abs(isize n) const
 }
 
 isize
-Debugger::getLengthOfInstruction(u8 opcode) const
+Debugger::disassembleRecordedInstr(isize i, char *str) const
 {
-    switch(addressingMode[opcode]) {
-        case ADDR_IMPLIED:
-        case ADDR_ACCUMULATOR:
-            return 1;
-        case ADDR_IMMEDIATE:
-        case ADDR_ZERO_PAGE:
-        case ADDR_ZERO_PAGE_X:
-        case ADDR_ZERO_PAGE_Y:
-        case ADDR_INDIRECT_X:
-        case ADDR_INDIRECT_Y:
-        case ADDR_RELATIVE:
-            return 2;
-        case ADDR_ABSOLUTE:
-        case ADDR_ABSOLUTE_X:
-        case ADDR_ABSOLUTE_Y:
-        case ADDR_DIRECT:
-        case ADDR_INDIRECT:
-            return 3;
-    }
-    return 1;
+    RecordedInstruction instr = logEntryAbs(i);
+
+    return cpu.disassembler.disassemble(str,
+                                        instr.pc,
+                                        instr.byte1,
+                                        instr.byte2,
+                                        instr.byte3);
 }
 
 isize
-Debugger::getLengthOfInstructionAtAddress(u16 addr) const
+Debugger::disassembleRecordedBytes(isize i, char *str) const
 {
-    return getLengthOfInstruction(cpu.readDasm(addr));
+    RecordedInstruction instr = logEntryAbs(i);
+
+    u8 bytes[] = {instr.byte1, instr.byte2, instr.byte3 };
+    isize len = cpu.getLengthOfInstruction(instr.byte1);
+
+    cpu.disassembler.dumpBytes(str, bytes, len);
+    return len;
 }
 
-isize
-Debugger::getLengthOfCurrentInstruction() const
+void
+Debugger::disassembleRecordedFlags(isize i, char *str) const
 {
-    return getLengthOfInstructionAtAddress(cpu.getPC0());
+    cpu.disassembler.disassembleFlags(str, logEntryAbs(i).flags);
 }
 
-u16
-Debugger::getAddressOfNextInstruction() const
+void
+Debugger::disassembleRecordedPC(isize i, char *str) const
 {
-    return (u16)(cpu.getPC0() + getLengthOfCurrentInstruction());
+    cpu.disassembler.dumpWord(str, logEntryAbs(i).pc);
 }
 
-const char *
-Debugger::disassembleRecordedInstr(int i, long *len) const
+void
+Debugger::jump(u16 addr)
 {
-    return disassembleInstr(logEntryAbs(i), len);
-}
+    cpu.reg.pc = addr;
+    cpu.reg.pc0 = addr;
+    cpu.next = fetch;
 
-const char *
-Debugger::disassembleRecordedBytes(int i) const
-{
-    return disassembleBytes(logEntryAbs(i));
-}
-
-const char *
-Debugger::disassembleRecordedFlags(int i) const
-{
-    return disassembleRecordedFlags(logEntryAbs(i));
-}
-
-const char *
-Debugger::disassembleRecordedPC(int i) const
-{
-    return disassembleAddr(logEntryAbs(i).pc);
-}
-
-const char *
-Debugger::disassembleInstr(u16 addr, long *len) const
-{
-    RecordedInstruction instr;
-    
-    instr.pc = addr;
-    instr.byte1 = cpu.readDasm(addr);
-    instr.byte2 = cpu.readDasm(addr + 1);
-    instr.byte3 = cpu.readDasm(addr + 2);
-    
-    return disassembleInstr(instr, len);
-}
-
-const char *
-Debugger::disassembleBytes(u16 addr) const
-{
-    RecordedInstruction instr;
-
-    instr.byte1 = cpu.readDasm(addr);
-    instr.byte2 = cpu.readDasm(addr + 1);
-    instr.byte3 = cpu.readDasm(addr + 2);
-
-    return disassembleBytes(instr);
-}
-
-const char *
-Debugger::disassembleAddr(u16 addr) const
-{
-    static char result[6];
-
-    hex ? sprint16x(result, addr) : sprint16d(result, addr);
-    return result;
-}
-
-const char *
-Debugger::disassembleInstruction(long *len) const
-{
-    return disassembleInstr(cpu.getPC0(), len);
-}
-
-const char *
-Debugger::disassembleDataBytes() const
-{
-    return disassembleBytes(cpu.getPC0());
-}
-
-const char *
-Debugger::disassemblePC() const
-{
-    return disassembleAddr(cpu.getPC0());
-}
-
-const char *
-Debugger::disassembleInstr(const RecordedInstruction &instr, long *len) const
-{
-    if (hex) {
-        return disassembleInstr<true>(instr, len);
-    } else {
-        return disassembleInstr<false>(instr, len);
-    }
-}
-
-template <bool hex> const char *
-Debugger::disassembleInstr(const RecordedInstruction &instr, long *len) const
-{
-    static char result[16];
-
-    u8 opcode = instr.byte1;
-    if (len) *len = getLengthOfInstruction(opcode);
-
-    // Convert command
-    char operand[6];
-    switch (addressingMode[opcode]) {
-            
-        case ADDR_IMMEDIATE:
-        case ADDR_ZERO_PAGE:
-        case ADDR_ZERO_PAGE_X:
-        case ADDR_ZERO_PAGE_Y:
-        case ADDR_INDIRECT_X:
-        case ADDR_INDIRECT_Y:
-        {
-            u8 value = instr.byte2;
-            hex ? sprint8x(operand, value) : sprint8d(operand, value);
-            break;
-        }
-        case ADDR_DIRECT:
-        case ADDR_INDIRECT:
-        case ADDR_ABSOLUTE:
-        case ADDR_ABSOLUTE_X:
-        case ADDR_ABSOLUTE_Y:
-        {
-            u16 value = LO_HI(instr.byte2, instr.byte3);
-            hex ? sprint16x(operand, value) : sprint16d(operand, value);
-            break;
-        }
-        case ADDR_RELATIVE:
-        {
-            u16 value = (u16)(instr.pc + 2 + (i8)instr.byte2);
-            hex ? sprint16x(operand, value) : sprint16d(operand, value);
-            break;
-        }
-        default:
-            break;
-    }
-    
-    switch (addressingMode[opcode]) {
-            
-        case ADDR_IMPLIED:
-        case ADDR_ACCUMULATOR:
-            
-            std::strcpy(result, "xxx");
-            break;
-            
-        case ADDR_IMMEDIATE:
-            
-            std::strcpy(result, hex ? "xxx #hh" : "xxx #ddd");
-            std::memcpy(&result[5], operand, hex ? 2 : 3);
-            break;
-            
-        case ADDR_ZERO_PAGE:
-            
-            std::strcpy(result, hex ? "xxx hh" : "xxx ddd");
-            std::memcpy(&result[4], operand, hex ? 2 : 3);
-            break;
-            
-        case ADDR_ZERO_PAGE_X:
-            
-            std::strcpy(result, hex ? "xxx hh,X" : "xxx ddd,X");
-            std::memcpy(&result[4], operand, hex ? 2 : 3);
-            break;
-            
-        case ADDR_ZERO_PAGE_Y:
-            
-            std::strcpy(result, hex ? "xxx hh,Y" : "xxx ddd,Y");
-            std::memcpy(&result[4], operand, hex ? 2 : 3);
-            break;
-            
-        case ADDR_ABSOLUTE:
-        case ADDR_DIRECT:
-            
-            std::strcpy(result, hex ? "xxx hhhh" : "xxx ddddd");
-            std::memcpy(&result[4], operand, hex ? 4 : 5);
-            break;
-            
-        case ADDR_ABSOLUTE_X:
-            
-            std::strcpy(result, hex ? "xxx hhhh,X" : "xxx ddddd,X");
-            std::memcpy(&result[4], operand, hex ? 4 : 5);
-            break;
-            
-        case ADDR_ABSOLUTE_Y:
-            
-            std::strcpy(result, hex ? "xxx hhhh,Y" : "xxx ddddd,Y");
-            std::memcpy(&result[4], operand, hex ? 4 : 5);
-            break;
-            
-        case ADDR_INDIRECT:
-            
-            std::strcpy(result, hex ? "xxx (hhhh)" : "xxx (ddddd)");
-            std::memcpy(&result[5], operand, hex ? 4 : 5);
-            break;
-            
-        case ADDR_INDIRECT_X:
-            
-            std::strcpy(result, hex ? "xxx (hh,X)" : "xxx (ddd,X)");
-            std::memcpy(&result[5], operand, hex ? 2 : 3);
-            break;
-            
-        case ADDR_INDIRECT_Y:
-            
-            std::strcpy(result, hex ? "xxx (hh),Y" : "xxx (ddd),Y");
-            std::memcpy(&result[5], operand, hex ? 2 : 3);
-            break;
-            
-        case ADDR_RELATIVE:
-            
-            std::strcpy(result, hex ? "xxx hhhh" : "xxx ddddd");
-            std::memcpy(&result[4], operand, hex ? 4 : 5);
-            break;
-            
-        default:
-            
-            std::strcpy(result, "???");
-    }
-    
-    // Copy mnemonic
-    strncpy(result, mnemonic[opcode], 3);
-    
-    return result;
-}
-
-const char *
-Debugger::disassembleBytes(const RecordedInstruction &instr) const
-{
-    static char result[13]; char *ptr = result;
-    
-    isize len = getLengthOfInstruction(instr.byte1);
-    
-    if (hex) {
-        
-        if (len >= 1) { sprint8x(ptr, instr.byte1); ptr[2] = ' '; ptr += 3; }
-        if (len >= 2) { sprint8x(ptr, instr.byte2); ptr[2] = ' '; ptr += 3; }
-        if (len >= 3) { sprint8x(ptr, instr.byte3); ptr[2] = ' '; ptr += 3; }
-        
-    } else {
-        
-        if (len >= 1) { sprint8d(ptr, instr.byte1); ptr[3] = ' '; ptr += 4; }
-        if (len >= 2) { sprint8d(ptr, instr.byte2); ptr[3] = ' '; ptr += 4; }
-        if (len >= 3) { sprint8d(ptr, instr.byte3); ptr[3] = ' '; ptr += 4; }
-    }
-    ptr[0] = 0;
-    
-    return result;
-}
-
-const char *
-Debugger::disassembleRecordedFlags(const RecordedInstruction &instr) const
-{
-    static char result[9];
-    
-    result[0] = (instr.flags & N_FLAG) ? 'N' : 'n';
-    result[1] = (instr.flags & V_FLAG) ? 'V' : 'v';
-    result[2] = '-';
-    result[3] = (instr.flags & B_FLAG) ? 'B' : 'b';
-    result[4] = (instr.flags & D_FLAG) ? 'D' : 'd';
-    result[5] = (instr.flags & I_FLAG) ? 'I' : 'i';
-    result[6] = (instr.flags & Z_FLAG) ? 'Z' : 'z';
-    result[7] = (instr.flags & C_FLAG) ? 'C' : 'c';
-    result[8] = 0;
-    
-    return result;
+    cpu.jumpedTo(addr);
 }
 
 }

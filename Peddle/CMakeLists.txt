@@ -2,6 +2,8 @@ add_library(peddle STATIC
 
 Peddle.cpp
 PeddleDebugger.cpp
+PeddleDisassembler.cpp
+StrWriter.cpp
 
 )
 

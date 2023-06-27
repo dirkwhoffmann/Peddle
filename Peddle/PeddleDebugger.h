@@ -7,9 +7,8 @@
 
 #pragma once
 
-#include "PeddleTypes.h"
-#include "PeddleMacros.h"
-#include <cstdint>
+#include "PeddleDebugger.h"
+#include "Peddle.h"
 
 namespace peddle {
 
@@ -140,12 +139,6 @@ class Debugger {
     
     // Reference to the connected CPU
     class Peddle &cpu;
-
-    // Textual representation for each opcode (used by the disassembler)
-    const char *mnemonic[256];
-
-    // Adressing mode of each opcode (used by the disassembler)
-    AddressingMode addressingMode[256];
     
 public:
     
@@ -181,11 +174,6 @@ private:
      */
     u64 softStop = UINT64_MAX - 1;
 
-public:
-    
-    // Number format used by the disassembler
-    bool hex = true;
-
     
     //
     // Initializing
@@ -196,11 +184,6 @@ public:
     Debugger(Peddle& ref) : cpu(ref) { };
     void reset();
 
-
-private:
-    
-    void registerInstruction(u8 opcode, const char *mnemonic, AddressingMode mode);
-
     
     //
     // Working with breakpoints and watchpoints
@@ -210,7 +193,7 @@ public:
 
     // Sets a soft breakpoint
     void setSoftStop(u64 addr);
-    void setSoftStopAtNextInstr() { setSoftStop(getAddressOfNextInstruction()); }
+    void setSoftStopAtNextInstr();
     
     // Returns true if a breakpoint hits at the provides address
     bool breakpointMatches(u32 addr);
@@ -222,6 +205,10 @@ public:
     //
     // Working with the instruction log
     //
+
+    // Dumps a portion of the log buffer
+    void dumpLogBuffer(std::ostream& os, isize count);
+    void dumpLogBuffer(std::ostream& os);
 
     // Turns instruction logging on or off
     void enableLogging();
@@ -243,51 +230,22 @@ public:
     u16 loggedPC0Rel(isize n) const;
     u16 loggedPC0Abs(isize n) const;
 
+    // Disassembles an item from the log buffer
+    isize disassembleRecordedInstr(isize i, char *str) const;
+    isize disassembleRecordedBytes(isize i, char *str) const;
+    void disassembleRecordedFlags(isize i, char *str) const;
+    void disassembleRecordedPC(isize i, char *str) const;
+
     // Clears the log buffer
     void clearLog() { logCnt = 0; }
-    
-    
-    //
-    // Examining instructions
-    //
-    
-    // Returns the length of an instruction in bytes
-    isize getLengthOfInstruction(u8 opcode) const;
-    isize getLengthOfInstructionAtAddress(u16 addr) const;
-    isize getLengthOfCurrentInstruction() const;
 
-    // Returns the address of the instruction following the current one
-    u16 getAddressOfNextInstruction() const;
-    
-    
+
     //
-    // Running the disassembler
+    // Changing state
     //
 
-    // Disassembles a previously recorded instruction
-    const char *disassembleRecordedInstr(int i, long *len) const;
-    const char *disassembleRecordedBytes(int i) const;
-    const char *disassembleRecordedFlags(int i) const;
-    const char *disassembleRecordedPC(int i) const;
-
-    // Disassembles the instruction at the specified address
-    const char *disassembleInstr(u16 addr, long *len) const;
-    const char *disassembleBytes(u16 addr) const;
-    const char *disassembleAddr(u16 addr) const;
-
-    // Disassembles the currently executed instruction
-    const char *disassembleInstruction(long *len) const;
-    const char *disassembleDataBytes() const;
-    const char *disassemblePC() const;
-
-private:
-    
-    const char *disassembleInstr(const RecordedInstruction &instr, long *len) const;
-    const char *disassembleBytes(const RecordedInstruction &instr) const;
-    const char *disassembleRecordedFlags(const RecordedInstruction &instr) const;
-
-    template <bool hex>
-    const char *disassembleInstr(const RecordedInstruction &instr, long *len) const;
+    // Continues program execution at the specified address
+    void jump(u16 addr);
 };
 
 }

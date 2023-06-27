@@ -8,6 +8,8 @@
 #pragma once
 
 #include "PeddleConfig.h"
+#include "PeddleTypes.h"
+#include "PeddleDisassembler.h"
 #include "PeddleDebugger.h"
 #include "PeddleUtils.h"
 
@@ -20,16 +22,32 @@ class Peddle {
     friend class Watchpoints;
 
     //
+    // Static lookup tables
+    //
+
+public:
+
+    // Table storing the first microinstruction for each opcode
+    static MicroInstruction actionFunc[256];
+
+    // Table storing a textual representation for each opcode
+    static const char *mnemonic[256];
+
+    // Table storing the adressing mode for each opcode
+    static AddressingMode addressingMode[256];
+
+
+    //
     // Configuration
     //
 
 protected:
 
-    // The emulated CPU model
-    CPURevision cpuModel = MOS_6510;
-
     // Instance counter (to distinguish different CPU instances)
     isize id;
+
+    // Emulated CPU model
+    CPURevision cpuModel = MOS_6510;
 
 
     //
@@ -38,21 +56,8 @@ protected:
 
 public:
 
-    // CPU debugger
     Debugger debugger = Debugger(*this);
-
-
-    //
-    // Lookup tables
-    //
-
-protected:
-
-    /* Mapping from opcodes to microinstructions. This array stores the tags
-     * of the second microcycle which is the microcycle following the fetch
-     * phase.
-     */
-    MicroInstruction actionFunc[256];
+    Disassembler disassembler = Disassembler(*this);
 
 
     //
@@ -62,7 +67,7 @@ protected:
 public:
 
     // Elapsed clock cycles since power up
-    u64 clock;
+    i64 clock;
 
 protected:
 
@@ -92,10 +97,10 @@ protected:
     bool rdyLine;
 
     // Cycle of the most recent rising edge of the RDY line
-    u64 rdyLineUp;
+    i64 rdyLineUp;
 
     // Cycle of the most recent falling edge of the RDY line
-    u64 rdyLineDown;
+    i64 rdyLineDown;
 
     /* Interrupt lines
      *
@@ -205,11 +210,23 @@ public:
     u16 addrMask() const;
     template <CPURevision C> u16 addrMask() const;
 
-    // Returns true if the CPU is jammed
-    bool isJammed() const { return next == JAM || next == JAM_2; }
-
     // Returns true if the next cycle marks the beginning of an instruction
     bool inFetchPhase() const { return next == fetch; }
+
+
+    //
+    // Examining instructions
+    //
+
+public:
+    
+    // Returns the length of an instruction in bytes
+    isize getLengthOfInstruction(u8 opcode) const;
+    isize getLengthOfInstructionAt(u16 addr) const;
+    isize getLengthOfCurrentInstruction() const;
+
+    // Returns the address of the instruction following the current one
+    u16 getAddressOfNextInstruction() const;
 
 
     //
@@ -286,6 +303,8 @@ public:
      */
     u16 getPC0() const { return reg.pc0; }
 
+    u16 getSP() const { return reg.sp; }
+
     bool getN() const { return reg.sr.n; }
     void setN(bool value) { reg.sr.n = value; }
 
@@ -335,14 +354,14 @@ private:
     template <CPURevision C> void writeStack(u8 sp, u8 value);
 
     template <CPURevision C> u16 readDasm(u16 addr) const;
-    template <CPURevision C> u16 readResetVector();
+    // template <CPURevision C> u16 readResetVector();
 
     
     //
     // Interfacing with the memory (low-level interface)
     //
 
-protected:
+public:
 
     virtual u8 read(u16 addr) { return 0; }
     virtual void write(u16 addr, u8 val) { };
@@ -386,9 +405,10 @@ protected:
     virtual void nmiDidTrigger() { }
 
     // Debugger delegates
-    virtual void breakpointReached(u16 addr) const { };
-    virtual void watchpointReached(u16 addr) const { };
+    virtual void breakpointReached(u16 addr) const { }
+    virtual void watchpointReached(u16 addr) const { }
     virtual void instructionLogged() const { }
+    virtual void jumpedTo(u16 addr) const { }
 
 
     //

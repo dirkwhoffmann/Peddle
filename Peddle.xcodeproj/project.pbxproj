@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		500E4E802A4B33B000A747AF /* PeddleDisassembler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 500E4E7E2A4B33B000A747AF /* PeddleDisassembler.cpp */; };
+		500E4E832A4B346D00A747AF /* StrWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 500E4E822A4B346D00A747AF /* StrWriter.cpp */; };
 		5044C5DF2932294100F4A413 /* Peddle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5044C5D72932294000F4A413 /* Peddle.cpp */; };
 		5044C5E02932294100F4A413 /* PeddleDebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5044C5D92932294100F4A413 /* PeddleDebugger.cpp */; };
 		50D1EA0B292D3C0E008E1415 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 50D1EA0A292D3C0E008E1415 /* main.cpp */; };
@@ -25,6 +27,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		500E4E7E2A4B33B000A747AF /* PeddleDisassembler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PeddleDisassembler.cpp; sourceTree = "<group>"; };
+		500E4E7F2A4B33B000A747AF /* PeddleDisassembler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PeddleDisassembler.h; sourceTree = "<group>"; };
+		500E4E812A4B346D00A747AF /* StrWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StrWriter.h; sourceTree = "<group>"; };
+		500E4E822A4B346D00A747AF /* StrWriter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = StrWriter.cpp; sourceTree = "<group>"; };
 		5044C5D32932294000F4A413 /* PeddleInit_cpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PeddleInit_cpp.h; sourceTree = "<group>"; };
 		5044C5D42932294000F4A413 /* PeddleConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PeddleConfig.h; sourceTree = "<group>"; };
 		5044C5D52932294000F4A413 /* PeddleTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PeddleTypes.h; sourceTree = "<group>"; };
@@ -86,6 +92,10 @@
 				5044C5DC2932294100F4A413 /* PeddleExec_cpp.h */,
 				5044C5DA2932294100F4A413 /* PeddleDebugger.h */,
 				5044C5D92932294100F4A413 /* PeddleDebugger.cpp */,
+				500E4E7E2A4B33B000A747AF /* PeddleDisassembler.cpp */,
+				500E4E7F2A4B33B000A747AF /* PeddleDisassembler.h */,
+				500E4E822A4B346D00A747AF /* StrWriter.cpp */,
+				500E4E812A4B346D00A747AF /* StrWriter.h */,
 			);
 			path = Peddle;
 			sourceTree = "<group>";
@@ -148,8 +158,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				50D1EA0B292D3C0E008E1415 /* main.cpp in Sources */,
+				500E4E832A4B346D00A747AF /* StrWriter.cpp in Sources */,
 				5044C5E02932294100F4A413 /* PeddleDebugger.cpp in Sources */,
 				5044C5DF2932294100F4A413 /* Peddle.cpp in Sources */,
+				500E4E802A4B33B000A747AF /* PeddleDisassembler.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

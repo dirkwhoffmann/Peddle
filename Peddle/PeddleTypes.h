@@ -517,6 +517,23 @@ typedef struct
 }
 RecordedInstruction;
 
+typedef struct
+{
+    const char *prefix;     // Prefix for hexidecimal numbers
+    u8 radix;               // 10 (decimal) or 16 (hexadecimal)
+    bool upperCase;         // Lettercase for hexadecimal digits A...F
+    char fill;              // Fill charachter: ' ', '0', or 0 (no fill)
+    bool plainZero;         // Determines whether 0 is printed with a prefix
+}
+DasmNumberFormat;
+
+typedef struct
+{
+    DasmNumberFormat numberFormat;
+    int tab;
+}
+DasmStyle;
+
 #ifdef __cplusplus
 }
 #endif

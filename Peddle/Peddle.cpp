@@ -6,9 +6,14 @@
 // -----------------------------------------------------------------------------
 
 #include "Peddle.h"
-#include "PeddleMacros.h"
+#include "PeddleUtils.h"
 
 namespace peddle {
+
+// Static lookup tables
+MicroInstruction Peddle::actionFunc[256] = { };
+const char *Peddle::mnemonic[256] = { };
+AddressingMode Peddle::addressingMode[256] = { };
 
 Peddle::Peddle()
 {

@@ -39,12 +39,12 @@ public:
 
     void dump()
     {
-        long len;
+        char instr[64];
+        auto len = disassembler.disassemble(instr, getPC0());
 
         printf("%04X %02X %02X %02X %02X %02X  %d%d1%d%d%d%d%d %-15s",
                getPC0(), getP(), reg.a, reg.x, reg.y, reg.sp,
-               getN(), getV(), getB(), getD(), getI(), getZ(), getC(),
-               debugger.disassembleInstruction(&len)
+               getN(), getV(), getB(), getD(), getI(), getZ(), getC(), instr
                );
 
         for (int i = 0; i < 10; i++) {
@@ -76,13 +76,14 @@ int main(int argc, const char * argv[]) {
 
 
     // Disassemble the program
-    long len;
+    u16 len;
+    char instr[64], bytes[64];
     for (u16 addr = 0x600; addr < 0x600 + sizeof(prog); addr += len) {
 
-        printf("%s: %-10s %s\n",
-               cpu.debugger.disassembleAddr(addr),
-               cpu.debugger.disassembleBytes(addr),
-               cpu.debugger.disassembleInstr(addr, &len));
+        len = (u16)cpu.disassembler.disassemble(instr, addr);
+        cpu.disassembler.dumpBytes(bytes, addr, len);
+
+        printf("%04X: %-10s %s\n", addr, bytes, instr);
     }
 
     printf("\nInstruction trace:\n\n");
