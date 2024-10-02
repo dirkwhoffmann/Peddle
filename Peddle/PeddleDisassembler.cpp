@@ -48,6 +48,191 @@ Disassembler::setIndentation(int value)
 }
 
 isize
+Disassembler::disass(char *dst, const char *fmt, u16 addr) const
+{
+    auto instr = RecordedInstruction {
+
+        .byte1 = cpu.readDasm(addr),
+        .byte2 = cpu.readDasm(addr + 1),
+        .byte3 = cpu.readDasm(addr + 2),
+        .pc = addr
+    };
+
+    return disass(dst, fmt, instr);
+}
+
+isize
+Disassembler::disass(char *dst, const char *fmt, const RecordedInstruction &instr) const
+{
+    bool ctrl = false;
+    isize tab = 0;
+
+    for (char c = fmt[0]; c != 0; c = (++fmt)[0]) {
+
+        if (!ctrl) {
+
+            if (c == '%') { ctrl = true; tab = 0; } else *dst++ = c;
+            continue;
+        }
+
+        if (c >= '0' && c <= '9') {
+
+            tab = 10 * tab + (c - '0');
+            continue;
+        }
+
+        switch (c) {
+
+            case 'p': // Program counter (instruction address)
+
+                dst += disass16(instr.pc, dst, tab);
+                break;
+
+            case 'a': // Accumulator
+
+                dst += disass8(instr.a, dst, tab);
+                break;
+
+            case 'x': // X register
+
+                dst += disass8(instr.x, dst, tab);
+                break;
+
+            case 'y': // Y register
+
+                dst += disass8(instr.y, dst, tab);
+                break;
+
+            case 's': // Stack pointer
+
+                dst += disass8(instr.sp, dst, tab);
+                break;
+
+            case 'b': // Instruction bytes (1 - 3)
+
+                dst += disassB(instr.byte1, instr.byte2, instr.byte3, dst, tab);
+                break;
+
+            case 'i': // Disassembled instruction
+
+                dst += disassI(instr.pc, instr.byte1, instr.byte2, instr.byte3, dst, tab);
+                break;
+
+            case 'f': // Flags
+
+                dst += disassF(instr.flags, dst, tab);
+                break;
+
+            default:
+                fatalError;
+        }
+
+        ctrl = false;
+    }
+    *dst = 0;
+
+    return cpu.getLengthOfInstruction(cpu.readDasm(instr.pc));
+}
+
+isize
+Disassembler::disass(char *dst, u16 addr) const
+{
+    return disass(dst, "%i", addr);
+}
+
+isize
+Disassembler::disass(char *dst, const RecordedInstruction &instr) const
+{
+    return disass(dst, "%i", instr);
+}
+
+isize
+Disassembler::disass8(u8 value, char *dst, isize tab) const
+{
+    StrWriter writer(dst, dataStyle);
+
+    writer << value;
+    writer.fill(tab);
+
+    return writer.length();
+}
+
+isize
+Disassembler::disass16(u16 value, char *dst, isize tab) const
+{
+    StrWriter writer(dst, dataStyle);
+
+    writer << value;
+    writer.fill(tab);
+
+    return writer.length();
+}
+
+isize
+Disassembler::disassB(u8 byte1, u8 byte2, u8 byte3, char *dst, isize tab) const
+{
+    StrWriter writer(dst, dataStyle);
+
+    auto count = cpu.getLengthOfInstruction(byte1);
+
+    writer << byte1;
+    if (count > 1) writer << ' ' << byte2;
+    if (count > 2) writer << ' ' << byte3;
+    writer.fill(tab);
+
+    return writer.length();
+}
+
+isize
+Disassembler::disassI(u16 addr, u8 byte1, u8 byte2, u8 byte3, char *dst, isize tab) const
+{
+    StrWriter writer(dst, instrStyle);
+
+    // Write mnemonic
+    writer << Ins { byte1 };
+
+    // Write operand
+    switch (cpu.addressingMode[byte1]) {
+
+        case ADDR_IMMEDIATE:    writer << Tab{} << Imm  { byte2 }; break;
+        case ADDR_ZERO_PAGE:    writer << Tab{} << Zp   { byte2 }; break;
+        case ADDR_ZERO_PAGE_X:  writer << Tab{} << Zpx  { byte2 }; break;
+        case ADDR_ZERO_PAGE_Y:  writer << Tab{} << Zpy  { byte2 }; break;
+        case ADDR_ABSOLUTE:     writer << Tab{} << Abs  { LO_HI(byte2, byte3) }; break;
+        case ADDR_ABSOLUTE_X:   writer << Tab{} << Absx { LO_HI(byte2, byte3) }; break;
+        case ADDR_ABSOLUTE_Y:   writer << Tab{} << Absy { LO_HI(byte2, byte3) }; break;
+        case ADDR_DIRECT:       writer << Tab{} << Dir  { LO_HI(byte2, byte3) }; break;
+        case ADDR_INDIRECT:     writer << Tab{} << Ind  { LO_HI(byte2, byte3) }; break;
+        case ADDR_INDIRECT_X:   writer << Tab{} << Indx { byte2 }; break;
+        case ADDR_INDIRECT_Y:   writer << Tab{} << Indy { byte2 }; break;
+        case ADDR_RELATIVE:     writer << Tab{} << Rel  { (u16)(addr + 2 + (i8)byte2) }; break;
+
+        default:
+            break;
+    }
+
+    writer << Fin{};
+    writer.fill(tab);
+
+    return writer.length();
+}
+
+isize
+Disassembler::disassF(u8 flags, char *dst, isize tab) const
+{
+    dst[0] = (flags & N_FLAG) ? 'N' : 'n';
+    dst[1] = (flags & V_FLAG) ? 'V' : 'v';
+    dst[2] = '-';
+    dst[3] = (flags & B_FLAG) ? 'B' : 'b';
+    dst[4] = (flags & D_FLAG) ? 'D' : 'd';
+    dst[5] = (flags & I_FLAG) ? 'I' : 'i';
+    dst[6] = (flags & Z_FLAG) ? 'Z' : 'z';
+    dst[7] = (flags & C_FLAG) ? 'C' : 'c';
+
+    return 8;
+}
+
+isize
 Disassembler::disassemble(char *str, u16 addr) const
 {
     return disassemble(str,

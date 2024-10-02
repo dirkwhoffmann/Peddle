@@ -40,7 +40,7 @@ public:
     void dump()
     {
         char instr[64];
-        auto len = disassembler.disassemble(instr, getPC0());
+        (void)disassembler.disassemble(instr, getPC0());
 
         printf("%04X %02X %02X %02X %02X %02X  %d%d1%d%d%d%d%d %-15s",
                getPC0(), getP(), reg.a, reg.x, reg.y, reg.sp,

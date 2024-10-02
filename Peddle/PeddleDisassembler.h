@@ -54,11 +54,27 @@ public:
 
 public:
 
-    // Disassembles an instruction
+    // Experimental
+    isize disass(char *dst, const char *fmt, u16 addr) const;
+    isize disass(char *dst, const char *fmt, const RecordedInstruction &instr) const;
+    isize disass(char *dst, u16 addr) const;
+    isize disass(char *dst, const RecordedInstruction &instr) const;
+
+private:
+
+    isize disass8(u8 value, char *dst, isize tab) const;
+    isize disass16(u16 value, char *dst, isize tab) const;
+    isize disassB(u8 byte1, u8 byte2, u8 byte3, char *dst, isize tab) const;
+    isize disassI(u16 addr, u8 byte1, u8 byte2, u8 byte3, char *dst, isize tab) const;
+    isize disassF(u8 flags, char *dst, isize tab) const;
+
+public:
+
+    // Disassembles an instruction (DEPRECATED)
     isize disassemble(char *str, u16 addr) const;
     isize disassemble(char *str, u16 pc, u8 byte1, u8 byte2, u8 byte3) const;
 
-    // Creates a textual representation for the status register
+    // Creates a textual representation for the status register (DEPRECATED)
     void disassembleFlags(char *str, u8 sr) const;
     void disassembleFlags(char *str) const;
 

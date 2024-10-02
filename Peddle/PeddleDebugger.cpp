@@ -22,12 +22,20 @@ bool
 Guard::eval(u32 addr)
 {
     if (this->addr == addr && this->enabled) {
-        if (++hits > skip) {
+        if (++hits > ignore) {
             return true;
         }
     }
     return false;
 }
+
+void 
+Guard::moveTo(u32 newAddr)
+{
+    addr = newAddr;
+    hits = 0;
+}
+
 
 //
 // Guards
@@ -40,13 +48,13 @@ Guards::~Guards()
 }
 
 Guard *
-Guards::guardWithNr(long nr) const
+Guards::guardNr(long nr) const
 {
     return nr < count ? &guards[nr] : nullptr;
 }
 
 Guard *
-Guards::guardAtAddr(u32 addr) const
+Guards::guardAt(u32 addr) const
 {
     for (int i = 0; i < count; i++) {
         if (guards[i].addr == addr) return &guards[i];
@@ -55,40 +63,8 @@ Guards::guardAtAddr(u32 addr) const
     return nullptr;
 }
 
-bool
-Guards::isSetAt(u32 addr) const
-{
-    Guard *guard = guardAtAddr(addr);
-
-    return guard != nullptr;
-}
-
-bool
-Guards::isSetAndEnabledAt(u32 addr) const
-{
-    Guard *guard = guardAtAddr(addr);
-
-    return guard != nullptr && guard->enabled;
-}
-
-bool
-Guards::isSetAndDisabledAt(u32 addr) const
-{
-    Guard *guard = guardAtAddr(addr);
-
-    return guard != nullptr && !guard->enabled;
-}
-
-bool
-Guards::isSetAndConditionalAt(u32 addr) const
-{
-    Guard *guard = guardAtAddr(addr);
-
-    return guard != nullptr && guard->skip != 0;
-}
-
 void
-Guards::addAt(u32 addr, long skip)
+Guards::setAt(u32 addr, long skip)
 {
     if (isSetAt(addr)) return;
 
@@ -104,7 +80,7 @@ Guards::addAt(u32 addr, long skip)
     guards[count].addr = addr;
     guards[count].enabled = true;
     guards[count].hits = 0;
-    guards[count].skip = skip;
+    guards[count].ignore = skip;
     count++;
     setNeedsCheck(true);
 }
@@ -131,18 +107,38 @@ Guards::removeAt(u32 addr)
 }
 
 void
-Guards::replace(long nr, u32 addr)
+Guards::moveTo(long nr, u32 newAddr)
 {
-    if (nr >= count || isSetAt(addr)) return;
-    
-    guards[nr].addr = addr;
-    guards[nr].hits = 0;
+    if (nr >= count || isSetAt(newAddr)) return;
+    guards[nr].moveTo(newAddr);
 }
 
 bool
 Guards::isEnabled(long nr) const
 {
-    return nr < count ? guards[nr].enabled : false;
+    Guard *guard = guardNr(nr);
+    return guard != nullptr && guard->enabled;
+}
+
+bool
+Guards::isEnabledAt(u32 addr) const
+{
+    Guard *guard = guardAt(addr);
+    return guard != nullptr && guard->enabled;
+}
+
+bool
+Guards::isDisabled(long nr) const
+{
+    Guard *guard = guardNr(nr);
+    return guard != nullptr && !guard->enabled;
+}
+
+bool
+Guards::isDisabledAt(u32 addr) const
+{
+    Guard *guard = guardAt(addr);
+    return guard != nullptr && !guard->enabled;
 }
 
 void
@@ -152,10 +148,26 @@ Guards::setEnable(long nr, bool val)
 }
 
 void
-Guards::setEnableAt(u32 addr, bool value)
+Guards::setEnableAt(u32 addr, bool val)
 {
-    Guard *guard = guardAtAddr(addr);
-    if (guard) guard->enabled = value;
+    Guard *guard = guardAt(addr);
+    if (guard) guard->enabled = val;
+}
+
+void 
+Guards::setEnableAll(bool val)
+{
+    Guard *guard = guardNr(0);
+    for (isize i = 0; guard != nullptr; guard = guardNr(++i)) {
+        guard->enabled = val;
+    }
+}
+
+void
+Guards::ignore(long nr, long count)
+{
+    Guard *guard = guardNr(nr);
+    if (guard) guard->ignore = count;
 }
 
 bool
@@ -340,6 +352,14 @@ Debugger::loggedPC0Abs(isize n) const
 {
     assert(n < loggedInstructions());
     return loggedPC0Rel(loggedInstructions() - n - 1);
+}
+
+isize
+Debugger::disassRecorded(char *dst, const char *fmt, isize nr) const
+{
+    RecordedInstruction instr = logEntryAbs(nr);
+    
+    return cpu.disassembler.disass(dst, fmt, instr);
 }
 
 isize

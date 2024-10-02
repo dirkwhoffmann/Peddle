@@ -7,11 +7,12 @@
 
 #pragma once
 
-#include "PeddleDebugger.h"
+#include "PeddleDebuggerTypes.h"
 #include "Peddle.h"
 
 namespace peddle {
 
+/*
 // Base structure for a single breakpoint or watchpoint
 struct Guard {
     
@@ -24,14 +25,18 @@ struct Guard {
     // Counts the number of hits
     long hits;
     
-    // Number of skipped hits before a match is signalled
-    long skip;
+    // Ignore counter
+    long ignore;
     
 public:
     
     // Returns true if the guard hits
     bool eval(u32 addr);
+
+    // Replaces the address by another
+    void moveTo(u32 newAddr);
 };
+*/
 
 // Base class for a collection of guards
 class Guards {
@@ -71,42 +76,50 @@ public:
     //
     
     long elements() const { return count; }
-    Guard *guardWithNr(long nr) const;
-    Guard *guardAtAddr(u32 addr) const;
+    Guard *guardNr(long nr) const;
+    Guard *guardAt(u32 addr) const;
     
     u32 guardAddr(long nr) const { return nr < count ? guards[nr].addr : 0; }
     
-    bool isSetAt(u32 addr) const;
-    bool isSetAndEnabledAt(u32 addr) const;
-    bool isSetAndDisabledAt(u32 addr) const;
-    bool isSetAndConditionalAt(u32 addr) const;
-    
+
     //
     // Adding or removing guards
     //
-    
-    void addAt(u32 addr, long skip = 0);
-    void removeAt(u32 addr);
-    
+
+    bool isSet(long nr) const { return guardNr(nr) != nullptr; }
+    bool isSetAt(u32 addr) const { return guardAt(addr) != nullptr; }
+
+    void setAt(u32 addr, long ignores = 0);
+    void moveTo(long nr, u32 newAddr);
+
     void remove(long nr);
+    void removeAt(u32 addr);
     void removeAll() { count = 0; setNeedsCheck(false); }
-    
-    void replace(long nr, u32 addr);
-    
+
+
     //
     // Enabling or disabling guards
     //
     
     bool isEnabled(long nr) const;
-    bool isDisabled(long nr) { return !isEnabled(nr); }
-    
-    void setEnable(long nr, bool val);
+    bool isEnabledAt(u32 addr) const;
+    bool isDisabled(long nr) const;
+    bool isDisabledAt(u32 addr) const;
+
     void enable(long nr) { setEnable(nr, true); }
-    void disable(long nr) { setEnable(nr, false); }
-    
-    void setEnableAt(u32 addr, bool val);
     void enableAt(u32 addr) { setEnableAt(addr, true); }
+    void enableAll() { setEnableAll(true); }
+
+    void disable(long nr) { setEnable(nr, false); }
     void disableAt(u32 addr) { setEnableAt(addr, false); }
+    void disableAll() { setEnableAll(false); }
+
+    void setEnable(long nr, bool val);
+    void setEnableAt(u32 addr, bool val);
+    void setEnableAll(bool val);
+
+    void ignore(long nr, long count);
+
 
     //
     // Checking a guard
@@ -114,6 +127,7 @@ public:
     
 private:
     
+    // Returns true if the guard hits
     bool eval(u32 addr);
 };
 
@@ -231,6 +245,9 @@ public:
     u16 loggedPC0Abs(isize n) const;
 
     // Disassembles an item from the log buffer
+    isize disassRecorded(char *dst, const char *fmt, isize addr) const;
+
+    // DEPRECATED
     isize disassembleRecordedInstr(isize i, char *str) const;
     isize disassembleRecordedBytes(isize i, char *str) const;
     void disassembleRecordedFlags(isize i, char *str) const;

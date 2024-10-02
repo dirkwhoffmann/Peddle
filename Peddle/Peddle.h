@@ -18,6 +18,7 @@ namespace peddle {
 class Peddle {
 
     friend class Debugger;
+    friend class Disassembler;
     friend class Breakpoints;
     friend class Watchpoints;
 
@@ -51,7 +52,7 @@ protected:
 
 
     //
-    // Sub components
+    // Subcomponents
     //
 
 public:
@@ -93,8 +94,15 @@ public:
 
 protected:
 
-    // Ready line (RDY). If pulled low, the CPU freezes on the next read access
-    bool rdyLine;
+    /* Ready line (RDY)
+     * 
+     * The variable is usually 0, indicating the RDY line is high. If the
+     * variable differs from 0, the RDY line is considered low. In this case,
+     * the CPU freezes on the next read (writes are unaffected). The variable
+     * is a bit mask since multiple sources can drive the RDY line low. The
+     * line is considered low precisely if one or more bits are set.
+     */
+    u8 rdyLine;
 
     // Cycle of the most recent rising edge of the RDY line
     i64 rdyLineUp;
@@ -102,17 +110,18 @@ protected:
     // Cycle of the most recent falling edge of the RDY line
     i64 rdyLineDown;
 
-    /* Interrupt lines
+    /* Interrupt lines (NMI and IRQ)
      *
-     * Usally both variables equal 0 which means that the two interrupt lines
-     * are high. When an external component requests an interrupt, the NMI or
-     * the IRQ line is pulled low. In that case, the corresponding variable is
-     * set to a positive value which indicates the interrupt source. The
-     * variables are used in form of bit fields since both interrupt lines are
-     * driven by multiple sources.
+     * Usually, both variables equal 0, indicating the two interrupt lines are
+     * high. When an external component requests an interrupt, the NMI or the
+     * IRQ line is pulled low. In that case, the corresponding variable is set
+     * to a positive value, indicating the interrupt source. The variables are
+     * used as bit masks since both interrupt lines are driven by multiple
+     * sources. The corresponding line is considered low precisely if one or
+     * more bits are set.
      */
-    IntSource nmiLine;
-    IntSource irqLine;
+    u8 nmiLine;
+    u8 irqLine;
 
     /* Edge detector (NMI line)
      * https://wiki.nesdev.com/w/index.php/CPU_interrupts
@@ -266,25 +275,25 @@ protected:
 
 
     //
-    // Handling interrupts
+    // Handling interrupts and the Ready line
     //
 
 public:
 
-    // Pulls down an interrupt line
-    void pullDownNmiLine(IntSource source);
-    void pullDownIrqLine(IntSource source);
+    // Pulls down a line
+    void pullDownNmiLine(u8 mask);
+    void pullDownIrqLine(u8 mask);
+    void pullDownRdyLine(u8 mask);
 
-    // Releases an interrupt line
-    void releaseNmiLine(IntSource source);
-    void releaseIrqLine(IntSource source);
+    // Releases a line
+    void releaseNmiLine(u8 mask);
+    void releaseIrqLine(u8 mask);
+    void releaseRdyLine(u8 mask);
 
-    // Checks the status of an interrupt line
-    IntSource getNmiLine() const { return nmiLine; }
-    IntSource getIrqLine() const { return irqLine; }
-
-    // Sets the value on the RDY line
-    void setRDY(bool value);
+    // Checks the status of a line
+    u8 getNmiLine() const { return nmiLine; }
+    u8 getIrqLine() const { return irqLine; }
+    u8 getRdyLine() const { return rdyLine; }
 
 
     //
@@ -361,7 +370,7 @@ private:
     // Interfacing with the memory (low-level interface)
     //
 
-public:
+protected:
 
     virtual u8 read(u16 addr) { return 0; }
     virtual void write(u16 addr, u8 val) { };
