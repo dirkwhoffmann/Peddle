@@ -51,40 +51,6 @@ typedef unsigned long      usize;
 
 
 //
-// Enumerations
-//
-
-/* The following macros 'enum_<type>' provide a way to make enumerations
- * easily accessible in Swift. All macros have two definitions, one for the
- * Swift side and one for the C side. Please note that the type mapping for
- * enum_long differs on both sides. On the Swift side, enums of this type are
- * mapped to 'long enums' to make them accessible via the Swift standard type
- * 'Int'. On the C side all enums are mapped to 'enum-less longs' to make them
- * easily serializable.
- */
-
-#if defined(__SWIFT__)
-
-// Definition for Swift
-#define peddle_enum_generic(_name, _type) \
-typedef enum __attribute__((enum_extensibility(open))) _name : _type _name; \
-enum _name : _type
-
-#define peddle_enum_long(_name) peddle_enum_generic(_name, long)
-
-#else
-
-// Definition for C
-#define peddle_enum_generic(_name, _type) \
-typedef _type _name; \
-enum : _type
-
-#define peddle_enum_long(_name) peddle_enum_generic(_name, long)
-
-#endif
-
-
-//
 // Constants
 //
 
@@ -132,16 +98,16 @@ static constexpr int CPU_CHECK_CP           = (1 << 3);
 // Enumerations
 //
 
-peddle_enum_long(CPUREV)
+/// CPU revision
+enum class CPURevision
 {
-    MOS_6502,       // PET 2001, VC 20, Atari 800, Apple I/II, BBC Micro
-    MOS_6507,       // Atari 2600
-    MOS_6510,       // C64
-    MOS_8502        // C128
+    MOS_6502,       ///< PET 2001, VC 20, Atari 800, Apple I/II, BBC Micro
+    MOS_6507,       ///< Atari 2600
+    MOS_6510,       ///< C64
+    MOS_8502        ///< C128
 };
-typedef CPUREV CPURevision;
 
-peddle_enum_long(ADDR_MODE)
+enum class AddrMode : long
 {
     ADDR_IMPLIED,
     ADDR_ACCUMULATOR,
@@ -158,9 +124,8 @@ peddle_enum_long(ADDR_MODE)
     ADDR_DIRECT,
     ADDR_INDIRECT
 };
-typedef ADDR_MODE AddressingMode;
 
-peddle_enum_long(MICRO_INSTRUCTION) {
+enum MicroInstruction {
 
     fetch,
 
@@ -453,7 +418,6 @@ peddle_enum_long(MICRO_INSTRUCTION) {
 
     TAS_abs_y, TAS_abs_y_2, TAS_abs_y_3, TAS_abs_y_4
 };
-typedef MICRO_INSTRUCTION MicroInstruction;
 
 
 //
