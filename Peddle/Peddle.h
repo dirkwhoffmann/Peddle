@@ -11,6 +11,7 @@
 #include "PeddleTypes.h"
 #include "PeddleDisassembler.h"
 #include "PeddleDebugger.h"
+#include "SymbolTable.h"
 #include "PeddleUtils.h"
 
 namespace peddle {
@@ -59,6 +60,7 @@ public:
 
     Debugger debugger = Debugger(*this);
     Disassembler disassembler = Disassembler(*this);
+    SymbolTable symbolTable = SymbolTable();
 
 
     //
@@ -177,7 +179,7 @@ protected:
 public:
 
     Peddle();
-    virtual ~Peddle();
+    virtual ~Peddle() = default;
 
 
     //

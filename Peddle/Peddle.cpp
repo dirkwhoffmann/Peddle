@@ -30,11 +30,6 @@ Peddle::Peddle()
     registerInstructions();
 }
 
-Peddle::~Peddle()
-{
-
-}
-
 void
 Peddle::setModel(CPURevision cpuModel)
 {
@@ -87,8 +82,8 @@ Peddle::addrMask() const
 {
     switch (C) {
 
-        case CPURevision::MOS_6507:  return 0x1FFF;
-        default:        return 0xFFFF;
+        case CPURevision::MOS_6507: return 0x1FFF;
+        default:                    return 0xFFFF;
     }
 }
 template u16 Peddle::addrMask<CPURevision::MOS_6502>() const;
