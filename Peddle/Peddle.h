@@ -83,7 +83,7 @@ protected:
     // Pending read operation (used in PEDDLE_ASYNC_READS mode)
     Async::ReadTarget pendingRead {};
 
-
+    
     //
     // Registers
     //
@@ -368,7 +368,6 @@ private:
     template <CPURevision C> void writeStack(u8 sp, u8 value);
 
     template <CPURevision C> u16 readDasm(u16 addr) const;
-    // template <CPURevision C> u16 readResetVector();
 
     
     //

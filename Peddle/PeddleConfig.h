@@ -49,7 +49,6 @@
  *
  * Enable to simplify usage, disable to gain speed.
  */
-
 #define PEDDLE_SIMPLE_MEMORY_API true
 
 /* Asynchronous read operations
