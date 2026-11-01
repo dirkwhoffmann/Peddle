@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Peddle.h"
+#include "SymbolTable.h"
 #include <cmath>
 
 namespace peddle {
@@ -47,17 +48,36 @@ public:
 
     char *base;             // Start address of the destination string
     char *ptr;              // Write pointer
-    const DasmStyle &style;
+    const DasmNumberFormat &format;
+    isize column;           // Column at which operands start (see Tab)
+    const SymbolTable *symTable;
 
 public:
 
-    StrWriter(char *p, const DasmStyle &style) : style(style) {
+    StrWriter(char *p, const DasmNumberFormat &format, isize column = 0) :
+        format(format), column(column), symTable(nullptr) {
 
         base = ptr = p;
     };
 
+    StrWriter(char *p, const DasmNumberFormat &format, isize column, const SymbolTable &st) :
+        StrWriter(p, format, column) {
+
+        symTable = &st;
+    };
+
     isize length() { return isize(ptr - base); }
     void fill(isize tab) { while (ptr < base + tab) *ptr++ = ' '; }
+
+    optional<string_view> resolveSymbol(u16 addr) {
+
+        if (symTable) {
+            if (auto symbol = symTable->symbols.seek(addr); symbol) {
+                return symbol->name;
+            }
+        }
+        return {};
+    }
 
 private:
 
@@ -67,13 +87,15 @@ private:
 
     void sprintd(char *&s, u64 value, isize digits);
     void sprintd(char *&s, u64 value);
-    void sprintx(char *&s, u64 value, isize digits);
+    void sprintx(char *&s, u64 value, isize digits, isize width = 0, char fill = 0);
     void sprintx(char *&s, u64 value);
 
 public:
 
     StrWriter& operator<<(char);
     StrWriter& operator<<(const char *);
+    StrWriter& operator<<(const string &);
+    StrWriter& operator<<(string_view);
     StrWriter& operator<<(u8);
     StrWriter& operator<<(u16);
 

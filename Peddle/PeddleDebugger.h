@@ -221,8 +221,8 @@ public:
     //
 
     // Dumps a portion of the log buffer
-    void dumpLogBuffer(std::ostream& os, isize count);
-    void dumpLogBuffer(std::ostream& os);
+    void dumpLogBuffer(std::ostream &os, isize count) const;
+    void dumpLogBuffer(std::ostream &os) const;
 
     // Turns instruction logging on or off
     void enableLogging();
@@ -246,6 +246,7 @@ public:
 
     // Disassembles an item from the log buffer
     isize disassRecorded(char *dst, const char *fmt, isize addr) const;
+    isize disassRecorded(char *dst, const char *fmt, isize addr, const DasmStyle &style) const;
 
     // DEPRECATED
     isize disassembleRecordedInstr(isize i, char *str) const;

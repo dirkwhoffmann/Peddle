@@ -253,7 +253,7 @@ Debugger::watchpointMatches(u32 addr)
 }
 
 void
-Debugger::dumpLogBuffer(std::ostream& os, isize count)
+Debugger::dumpLogBuffer(std::ostream &os, isize count) const
 {
     isize num = loggedInstructions();
 
@@ -282,7 +282,7 @@ Debugger::dumpLogBuffer(std::ostream& os, isize count)
 }
 
 void
-Debugger::dumpLogBuffer(std::ostream& os)
+Debugger::dumpLogBuffer(std::ostream &os) const
 {
     dumpLogBuffer(os, loggedInstructions());
 }
@@ -360,6 +360,14 @@ Debugger::disassRecorded(char *dst, const char *fmt, isize nr) const
     RecordedInstruction instr = logEntryAbs(nr);
     
     return cpu.disassembler.disass(dst, fmt, instr);
+}
+
+isize
+Debugger::disassRecorded(char *dst, const char *fmt, isize nr, const DasmStyle &style) const
+{
+    RecordedInstruction instr = logEntryAbs(nr);
+
+    return cpu.disassembler.disass(dst, fmt, instr, style);
 }
 
 isize
