@@ -6,8 +6,7 @@
 // -----------------------------------------------------------------------------
 
 void
-Peddle::registerCallback(u8 opcode, const char *mnemonic,
-                         AddrMode mode, MicroInstruction mInstr)
+Peddle::registerCallback(u8 opcode, const char *mnemonic, AddrMode mode, MicroInstruction mInstr)
 {
     // Table is write-once
     assert(mInstr == JAM || actionFunc[opcode] == JAM);

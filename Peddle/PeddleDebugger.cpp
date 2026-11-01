@@ -7,6 +7,7 @@
 
 #include "PeddleConfig.h"
 #include "Peddle.h"
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -256,28 +257,12 @@ void
 Debugger::dumpLogBuffer(std::ostream &os, isize count) const
 {
     isize num = loggedInstructions();
+    char buf[256];
 
-    char pc[16];
-    char instr[16];
-    char flags[16];
+    for (isize i = std::max<isize>(num - count, 0); i < num; i++) {
 
-    for (isize i = num - count; i < num ; i++) {
-
-        if (i >= 0) {
-
-            cpu.debugger.disassembleRecordedPC(i, pc);
-            cpu.debugger.disassembleRecordedInstr(i, instr);
-            cpu.debugger.disassembleRecordedFlags(i, flags);
-
-            os << std::setfill('0');
-            os << "   ";
-            os << std::right << std::setw(4) << pc;
-            os << "   ";
-            os << flags;
-            os << "    ";
-            os << instr;
-            os << std::endl;
-        }
+        cpu.disassembler.disass(buf, "%14l %p  %f    %i", logEntryAbs(i));
+        os << buf << std::endl;
     }
 }
 
@@ -392,18 +377,6 @@ Debugger::disassembleRecordedBytes(isize i, char *str) const
 
     cpu.disassembler.dumpBytes(str, bytes, len);
     return len;
-}
-
-void
-Debugger::disassembleRecordedFlags(isize i, char *str) const
-{
-    cpu.disassembler.disassembleFlags(str, logEntryAbs(i).flags);
-}
-
-void
-Debugger::disassembleRecordedPC(isize i, char *str) const
-{
-    cpu.disassembler.dumpWord(str, logEntryAbs(i).pc);
 }
 
 void
