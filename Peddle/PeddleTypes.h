@@ -419,6 +419,12 @@ enum MicroInstruction {
     TAS_abs_y, TAS_abs_y_2, TAS_abs_y_3, TAS_abs_y_4
 };
 
+namespace Async {
+
+enum ReadTarget { IDLE, IR, ADL, ADH, IDL, D, PCL, PCH, P, A };
+
+}
+
 
 //
 // Structures
@@ -448,6 +454,7 @@ typedef struct
     u16 pc;   // Program counter
     u16 pc0;  // Frozen program counter (beginning of current instruction)
 
+    u8 ir;    // Instruction register
     u8 sp;    // Stack pointer
 
     u8 a;     // Accumulator
